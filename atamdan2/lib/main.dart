@@ -307,7 +307,10 @@ class _LoginScreenState extends State<LoginScreen> {
         MaterialPageRoute(
           builder: (context) => widget.userType == UserType.seller
               ? SellerDashboard(sellerId: 'dummy-seller-id')
-              : BuyerHome(buyerId: 'dummy-buyer-id'),
+              : BuyerHome(
+                  buyerId: 'dummy-buyer-id',
+                  products: SellerDashboard.globalProducts,
+                ),
         ),
       );
     }

@@ -6,6 +6,7 @@ import 'dart:convert';
 
 class SellerDashboard extends StatefulWidget {
   final String sellerId;
+  static List<Product> globalProducts = []; // Static list to share products
 
   const SellerDashboard({super.key, required this.sellerId});
 
@@ -15,7 +16,7 @@ class SellerDashboard extends StatefulWidget {
 
 class _SellerDashboardState extends State<SellerDashboard> {
   int _selectedIndex = 0;
-  final List<Product> _products = [];
+  List<Product> get _products => SellerDashboard.globalProducts;
   final List<Order> _orders = [];
 
   @override
@@ -54,21 +55,7 @@ class _SellerDashboardState extends State<SellerDashboard> {
       ),
       floatingActionButton: _selectedIndex == 1
           ? FloatingActionButton.extended(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) =>
-                        AddProductScreen(sellerId: widget.sellerId),
-                  ),
-                ).then((newProduct) {
-                  if (newProduct != null) {
-                    setState(() {
-                      _products.add(newProduct);
-                    });
-                  }
-                });
-              },
+              onPressed: _handleAddProduct,
               icon: const Icon(Icons.add),
               label: const Text('Ürün Ekle'),
             )
@@ -443,16 +430,14 @@ class _SellerDashboardState extends State<SellerDashboard> {
       final base64String = imageUrl.split(',')[1];
       return Image.memory(
         base64Decode(base64String),
-        height: 150,
         width: double.infinity,
-        fit: BoxFit.cover,
+        fit: BoxFit.contain,
       );
     }
     return Image.network(
       imageUrl,
-      height: 150,
       width: double.infinity,
-      fit: BoxFit.cover,
+      fit: BoxFit.contain,
     );
   }
 
@@ -526,76 +511,90 @@ class _SellerDashboardState extends State<SellerDashboard> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Stack(
-                        children: [
-                          ClipRRect(
-                            borderRadius: const BorderRadius.vertical(
-                              top: Radius.circular(16),
-                            ),
-                            child: _buildProductImage(
-                              product.imageUrls.isNotEmpty
-                                  ? product.imageUrls.first
-                                  : 'https://placeholder.com/150',
-                            ),
-                          ),
-                          Positioned(
-                            top: 8,
-                            right: 8,
-                            child: IconButton(
-                              onPressed: () {
-                                // TODO: Implement edit product
-                              },
-                              icon: const Icon(Icons.more_vert),
-                              style: IconButton.styleFrom(
-                                backgroundColor: Colors.white,
-                                padding: const EdgeInsets.all(8),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.all(12),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                      Expanded(
+                        flex: 3,
+                        child: Stack(
                           children: [
-                            Text(
-                              product.name,
-                              style: const TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 14,
+                            Container(
+                              width: double.infinity,
+                              decoration: const BoxDecoration(
+                                borderRadius: BorderRadius.vertical(
+                                  top: Radius.circular(16),
+                                ),
                               ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                            const SizedBox(height: 4),
-                            Row(
-                              children: [
-                                Icon(
-                                  Icons.inventory_2_outlined,
-                                  size: 16,
-                                  color: Colors.grey[600],
+                              child: ClipRRect(
+                                borderRadius: const BorderRadius.vertical(
+                                  top: Radius.circular(16),
                                 ),
-                                const SizedBox(width: 4),
-                                Text(
-                                  '${product.stockQuantity} ${product.unit}',
-                                  style: TextStyle(
-                                    color: Colors.grey[600],
-                                    fontSize: 12,
-                                  ),
+                                child: _buildProductImage(
+                                  product.imageUrls.isNotEmpty
+                                      ? product.imageUrls.first
+                                      : 'https://placeholder.com/150',
                                 ),
-                              ],
+                              ),
                             ),
-                            const SizedBox(height: 8),
-                            Text(
-                              '${product.price.toStringAsFixed(2)} ₺',
-                              style: TextStyle(
-                                color: Theme.of(context).colorScheme.primary,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 16,
+                            Positioned(
+                              top: 8,
+                              right: 8,
+                              child: IconButton(
+                                onPressed: () {
+                                  // TODO: Implement edit product
+                                },
+                                icon: const Icon(Icons.more_vert),
+                                style: IconButton.styleFrom(
+                                  backgroundColor: Colors.white,
+                                  padding: const EdgeInsets.all(8),
+                                ),
                               ),
                             ),
                           ],
+                        ),
+                      ),
+                      Expanded(
+                        flex: 2,
+                        child: Padding(
+                          padding: const EdgeInsets.all(12),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                product.name,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 14,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              const SizedBox(height: 4),
+                              Row(
+                                children: [
+                                  Icon(
+                                    Icons.inventory_2_outlined,
+                                    size: 16,
+                                    color: Colors.grey[600],
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    '${product.stockQuantity} ${product.unit}',
+                                    style: TextStyle(
+                                      color: Colors.grey[600],
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                '${product.price.toStringAsFixed(2)} ₺',
+                                style: TextStyle(
+                                  color: Theme.of(context).colorScheme.primary,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 16,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
                     ],
@@ -1056,5 +1055,20 @@ class _SellerDashboardState extends State<SellerDashboard> {
       trailing: trailing ?? const Icon(Icons.arrow_forward_ios, size: 16),
       onTap: () {},
     );
+  }
+
+  void _handleAddProduct() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => AddProductScreen(sellerId: widget.sellerId),
+      ),
+    ).then((newProduct) {
+      if (newProduct != null) {
+        setState(() {
+          SellerDashboard.globalProducts.add(newProduct);
+        });
+      }
+    });
   }
 }

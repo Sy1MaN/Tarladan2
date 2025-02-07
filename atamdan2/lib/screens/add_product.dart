@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'dart:typed_data';
 import 'dart:convert';
+import 'dart:io';
+import 'package:file_picker/file_picker.dart';
 import '../models/product.dart';
 
 class AddProductScreen extends StatefulWidget {
@@ -28,7 +30,7 @@ class _AddProductScreenState extends State<AddProductScreen> {
   final List<String> _categories = [
     'Sebzeler',
     'Meyveler',
-    'Tahıllar',
+    'Tahillar',
     'Süt Ürünleri',
     'Et Ürünleri',
     'Diğer',
@@ -51,7 +53,7 @@ class _AddProductScreenState extends State<AddProductScreen> {
           !clipboardData!.text!.startsWith('data:image')) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Panoda resim bulunamadı'),
+            content: Text('Panoda resim bulunamadi'),
             backgroundColor: Colors.red,
           ),
         );
@@ -65,10 +67,43 @@ class _AddProductScreenState extends State<AddProductScreen> {
 
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Resim başarıyla eklendi'),
+          content: Text('Resim başariyla eklendi'),
           backgroundColor: Colors.green,
         ),
       );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Resim eklenirken bir hata oluştu'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
+  Future<void> _pickImage() async {
+    try {
+      final result = await FilePicker.platform.pickFiles(
+        type: FileType.image,
+        allowMultiple: false,
+      );
+
+      if (result != null) {
+        final file = File(result.files.single.path!);
+        final bytes = await file.readAsBytes();
+        final base64String = base64Encode(bytes);
+
+        setState(() {
+          _imageBase64List.add(base64String);
+        });
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Resim başarıyla eklendi'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -188,7 +223,7 @@ class _AddProductScreenState extends State<AddProductScreen> {
         ),
         const SizedBox(height: 8),
         const Text(
-          'Bir resmi kopyalayıp buraya yapıştırabilirsiniz',
+          'Bir resmi kopyalayıp yapıştırabilir veya bilgisayarınızdan seçebilirsiniz',
           style: TextStyle(
             fontSize: 14,
             color: Colors.grey,
@@ -213,10 +248,21 @@ class _AddProductScreenState extends State<AddProductScreen> {
                       width: 1,
                     ),
                   ),
-                  child: IconButton(
-                    onPressed: _pasteImage,
-                    icon: const Icon(Icons.add_photo_alternate_outlined),
-                    iconSize: 32,
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      IconButton(
+                        onPressed: _pickImage,
+                        icon: const Icon(Icons.file_upload),
+                        iconSize: 32,
+                      ),
+                      const SizedBox(height: 4),
+                      IconButton(
+                        onPressed: _pasteImage,
+                        icon: const Icon(Icons.content_paste),
+                        iconSize: 32,
+                      ),
+                    ],
                   ),
                 );
               }
